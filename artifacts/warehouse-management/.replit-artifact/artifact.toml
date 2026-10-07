@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Warehouse Management System"
+description = "A simple warehouse operations app for small teams to sign in, review stock levels, manage products, and record inventory changes."
+version = "1.0.0"
+id = "artifacts/warehouse-management"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 18932
+
+[services.development]
+run = "pnpm --filter @workspace/warehouse-management run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/warehouse-management", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/warehouse-management/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "18932"
+BASE_PATH = "/"

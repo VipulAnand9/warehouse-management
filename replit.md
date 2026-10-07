@@ -1,6 +1,6 @@
-# [Project name]
+# Shelfwise Warehouse Management
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A warehouse MVP for small teams to review stock, manage products, and record inventory changes.
 
 ## Run & Operate
 
@@ -22,23 +22,28 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/warehouse-management/src/App.tsx` — app routes, authenticated shell, dashboard, inventory, and stock screens
+- `artifacts/warehouse-management/src/data/inventory.ts` — demo products, browser persistence, and inventory change helpers
+- `artifacts/warehouse-management/src/index.css` — Shelfwise visual theme and responsive layout
+- `artifacts/api-server/src/app.ts` — shared API server with Clerk proxy/middleware wiring
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Inventory is a browser-persisted demo for the first MVP; changes are not shared across devices or accounts.
+- Authentication uses Replit-managed Clerk email/password sign-in.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+Shelfwise provides a public introduction and Clerk sign-in, then a dashboard for product totals, available units, low-stock items, and recent activity. Signed-in users can search, view, add, edit, and delete products, and record received or removed stock.
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Build incrementally as an MVP, prioritizing login, dashboard, inventory, then stock management.
+- Keep the interface intuitive for non-technical users and avoid unnecessary complexity.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Replit-managed Clerk supports email/password sign-in; username-based sign-in requires a different Clerk configuration.
 
 ## Pointers
 
