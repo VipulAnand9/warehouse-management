@@ -1,8 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
-import { ClerkProvider, SignIn, useAuth, useClerk, useUser } from '@clerk/react';
-import { publishableKeyFromHost } from '@clerk/react/internal';
-import { shadcn } from '@clerk/themes';
 import { Link, Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
+import type { DemoUserRole } from '@workspace/api-client-react';
+import { DemoAuthProvider, useDemoAuth } from './auth/demo-auth';
 import {
   Activity as ActivityIcon, ArrowDownLeft, ArrowRight, ArrowUpRight, Boxes, Check,
   ChevronDown, CircleAlert, Clock3, LayoutDashboard, MapPin, Menu, Package,
@@ -16,63 +15,6 @@ import {
 
 const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 const signInPath = `${basePath}/sign-in` || '/sign-in';
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
-const clerkAppearance = {
-  theme: shadcn,
-  cssLayerName: 'clerk',
-  options: {
-    logoPlacement: 'inside' as const,
-    logoLinkUrl: basePath || '/',
-    logoImageUrl: `${window.location.origin}${basePath}/shelfwise-mark.svg`,
-  },
-  variables: {
-    colorPrimary: '#2d6555',
-    colorForeground: '#25333a',
-    colorMutedForeground: '#718078',
-    colorDanger: '#b64d43',
-    colorBackground: '#fffefa',
-    colorInput: '#fffefa',
-    colorInputForeground: '#25333a',
-    colorNeutral: '#e7e2d7',
-    fontFamily: 'DM Sans, sans-serif',
-    borderRadius: '10px',
-  },
-  elements: {
-    rootBox: 'w-full flex justify-center',
-    cardBox: 'bg-[#fffefa] rounded-2xl w-[440px] max-w-full overflow-hidden',
-    card: '!shadow-none !border-0 !bg-transparent !rounded-none',
-    footer: '!shadow-none !border-0 !bg-transparent !rounded-none',
-    headerTitle: 'font-bold tracking-tight text-[#25333a]',
-    headerSubtitle: 'text-[#718078]',
-    socialButtonsBlockButtonText: 'hidden',
-    formFieldLabel: 'text-[#25333a]',
-    footerActionLink: 'font-semibold text-[#2d6555]',
-    footerActionText: 'text-[#718078]',
-    footerAction: 'hidden',
-    dividerText: 'hidden',
-    identityPreviewEditButton: 'text-[#2d6555]',
-    formFieldSuccessText: 'text-[#2d6555]',
-    alertText: 'text-[#25333a]',
-    logoBox: 'justify-center',
-    logoImage: 'max-h-10',
-    socialButtonsBlockButton: 'hidden',
-    formButtonPrimary: 'font-semibold',
-    formFieldInput: 'border-[#e7e2d7] bg-white text-[#25333a]',
-    dividerLine: 'hidden',
-    dividerRow: 'hidden',
-    alert: 'border-[#e7e2d7]',
-    otpCodeFieldInput: 'border-[#e7e2d7] bg-white text-[#25333a]',
-    formFieldRow: 'text-[#25333a]',
-    main: 'text-[#25333a]',
-  },
-};
-const clerkLocalization = {
-  signIn: { start: { title: 'Welcome back', subtitle: 'Sign in to your Shelfwise workspace' } },
-};
 
 function Brand({ compact = false, light = false }: { compact?: boolean; light?: boolean }) {
   return <span className={`brand ${light ? 'brand-light' : ''}`}>
@@ -96,6 +38,19 @@ function fmtDate(value: string) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return '—';
   return new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(date);
+}
+function roleName(role: DemoUserRole | undefined) {
+  const labels: Record<DemoUserRole, string> = {
+    warehouse_manager: 'Warehouse Manager',
+    inventory_clerk: 'Inventory Clerk',
+    receiving_staff: 'Receiving Staff',
+    picking_packing_staff: 'Picking & Packing',
+    dispatch_staff: 'Dispatch Staff',
+    system_administrator: 'System Administrator',
+    supplier: 'Supplier',
+    delivery_partner: 'Delivery Partner',
+  };
+  return role ? labels[role] : 'Team member';
 }
 function Header({ title, eyebrow, children }: { title: string; eyebrow: string; children?: ReactNode }) {
   return <div className="page-head">
@@ -128,14 +83,14 @@ function SideNav({ path, onNavigate }: { path: string; onNavigate?: () => void }
   </aside>;
 }
 function Topbar() {
-  const { user } = useUser();
-  const clerk = useClerk();
-  const name = user?.firstName || user?.primaryEmailAddress?.emailAddress?.split('@')[0] || 'Team member';
+  const { user, signOut } = useDemoAuth();
+  const [, setLocation] = useLocation();
+  const name = user?.name || 'Team member';
   const initial = name.slice(0, 1).toUpperCase();
   return <header className="topbar">
     <div className="topbar-mobile"><Brand compact/><span className="mobile-warehouse">North Dock</span></div>
     <div className="topbar-location"><span className="live-dot"/><span>North Dock warehouse</span><span className="topbar-divider">/</span><span>Demo workspace</span></div>
-    <div className="topbar-user"><span className="user-avatar">{initial}</span><span className="user-name">{name}</span><button className="icon-button" aria-label="Sign out" title="Sign out" onClick={() => clerk.signOut({ redirectUrl: '/' })} data-testid="button-sign-out"><LogOut size={16}/></button></div>
+    <div className="topbar-user"><span className="user-avatar">{initial}</span><span className="user-identity"><span className="user-name">{name}</span><small className="user-role">{roleName(user?.role)}</small></span><button className="icon-button" aria-label="Sign out" title="Sign out" onClick={() => { void signOut().then(() => setLocation('/')).catch(() => window.alert('Could not sign out. Please try again.')); }} data-testid="button-sign-out"><LogOut size={16}/></button></div>
   </header>;
 }
 function AppShell({ children }: { children: ReactNode }) {
@@ -148,9 +103,9 @@ function AppShell({ children }: { children: ReactNode }) {
   </div>;
 }
 function PublicHome() {
-  const { isSignedIn, isLoaded } = useAuth();
+  const { user, isLoading } = useDemoAuth();
   const [, setLocation] = useLocation();
-  useEffect(() => { if (isLoaded && isSignedIn) setLocation('/dashboard'); }, [isLoaded, isSignedIn, setLocation]);
+  useEffect(() => { if (!isLoading && user) setLocation('/dashboard'); }, [isLoading, user, setLocation]);
   return <div className="landing grain">
     <header className="landing-nav"><Link href="/" className="landing-brand"><Brand/></Link><div className="landing-nav-right"><span className="nav-quiet">Made for the people who keep things moving.</span><Link href={signInPath} className="btn btn-outline">Sign in <ArrowRight size={15}/></Link></div></header>
     <main>
@@ -333,20 +288,65 @@ function Stock() {
   </div>;
 }
 function Protected({ children }: { children: ReactNode }) {
-  const { isLoaded, isSignedIn } = useAuth();
+  const { isLoading, user, loadError, retrySession } = useDemoAuth();
   const [, setLocation] = useLocation();
-  useEffect(() => { if (isLoaded && !isSignedIn) setLocation(signInPath); }, [isLoaded, isSignedIn, setLocation]);
-  if (!isLoaded) return <div className="auth-loading"><div className="loading-brand"><Brand/></div><div className="loading-skeleton"><i/><i/><i/></div></div>;
-  if (!isSignedIn) return null;
+  useEffect(() => { if (!isLoading && !user && !loadError) setLocation(signInPath); }, [isLoading, user, loadError, setLocation]);
+  if (isLoading) return <div className="auth-loading"><div className="loading-brand"><Brand/></div><div className="loading-skeleton"><i/><i/><i/></div></div>;
+  if (loadError) return <div className="auth-loading"><Brand/><p className="auth-retry-message">{loadError}</p><button className="btn btn-primary" onClick={() => void retrySession()}>Retry</button></div>;
+  if (!user) return null;
   return <AppShell>{children}</AppShell>;
 }
 function AuthRoute() {
-  return <div className="auth-page grain"><Link href="/" className="auth-brand"><Brand/></Link><div className="auth-aside"><div className="auth-aside-kicker">SHELFWISE / NORTH DOCK</div><div className="auth-aside-copy display">A clear view<br/>of <em>what’s next.</em></div><div className="auth-aside-bottom"><span className="auth-graphic"><Boxes size={24}/></span><p>Your stockroom, organized.<br/>Your next shift, already in the know.</p></div></div><div className="auth-content"><div className="auth-card-wrap"><SignIn routing="path" path={signInPath}/></div><span className="auth-legal">PRIVATE BY DESIGN <span>·</span> WAREHOUSE STAFF ONLY</span></div></div>;
+  const { user, loadError, signIn, retrySession } = useDemoAuth();
+  const [, setLocation] = useLocation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  useEffect(() => { if (user) setLocation('/dashboard'); }, [user, setLocation]);
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError('');
+    setPending(true);
+    try {
+      await signIn({ email: email.trim(), password });
+      setLocation('/dashboard');
+    } catch {
+      setError('Email or password is incorrect.');
+    } finally {
+      setPending(false);
+    }
+  }
+
+  return <div className="auth-page grain">
+    <Link href="/" className="auth-brand"><Brand/></Link>
+    <div className="auth-aside"><div className="auth-aside-kicker">SHELFWISE / NORTH DOCK</div><div className="auth-aside-copy display">A clear view<br/>of <em>what’s next.</em></div><div className="auth-aside-bottom"><span className="auth-graphic"><Boxes size={24}/></span><p>Your stockroom, organized.<br/>Your next shift, already in the know.</p></div></div>
+    <div className="auth-content">
+      <div className="auth-card-wrap">
+        <section className="demo-login-card panel">
+          <div className="demo-login-mark"><Boxes size={21}/></div>
+          <div className="eyebrow">WAREHOUSE WORKSPACE</div>
+          <h1 className="display demo-login-title">Worker sign in</h1>
+          <p className="demo-login-copy">Sign in with an assigned demo account.</p>
+          <form className="demo-login-form" onSubmit={submit}>
+            <label>Email address<input className="field" type="email" autoComplete="username" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="name@warehouse.test"/></label>
+            <label>Password<input className="field" type="password" autoComplete="current-password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter your password"/></label>
+            {loadError && <div className="form-error">{loadError}<button type="button" className="demo-retry" onClick={() => void retrySession()}>Retry</button></div>}
+            {error && <div className="form-error">{error}</div>}
+            <button className="btn btn-primary demo-login-submit" type="submit" disabled={pending}>{pending ? 'Checking…' : 'Sign in'} <ArrowRight size={16}/></button>
+          </form>
+          <p className="demo-login-note"><ShieldCheck size={14}/> Demo accounts only · no self-registration</p>
+        </section>
+      </div>
+      <span className="auth-legal">PRIVATE BY DESIGN <span>·</span> WAREHOUSE STAFF ONLY</span>
+    </div>
+  </div>;
 }
 function NotFound() {
   return <div className="not-found"><Brand/><span className="eyebrow">404 · WRONG AISLE</span><h1 className="display">We couldn’t find<br/>that shelf.</h1><p>The page may have moved or the address may be off.</p><Link href="/dashboard" className="btn btn-primary">Back to overview <ArrowRight size={16}/></Link></div>;
 }
-function ClerkApp() {
+function AppRoutes() {
   return <Switch>
     <Route path="/"><PublicHome/></Route>
     <Route path="/dashboard"><Protected><Dashboard/></Protected></Route>
@@ -357,28 +357,7 @@ function ClerkApp() {
   </Switch>;
 }
 
-function stripBase(path: string) {
-  return basePath && path.startsWith(basePath)
-    ? path.slice(basePath.length) || '/'
-    : path;
-}
-
-function ClerkProviderWithRoutes() {
-  const [, setLocation] = useLocation();
-  return <ClerkProvider
-    publishableKey={clerkPubKey}
-    proxyUrl={clerkProxyUrl}
-    appearance={clerkAppearance}
-    localization={clerkLocalization}
-    signInUrl={signInPath}
-    routerPush={(to) => setLocation(stripBase(to))}
-    routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
-  >
-    <ClerkApp/>
-  </ClerkProvider>;
-}
-
 function App() {
-  return <WouterRouter base={basePath}><ClerkProviderWithRoutes/></WouterRouter>;
+  return <WouterRouter base={basePath}><DemoAuthProvider><AppRoutes/></DemoAuthProvider></WouterRouter>;
 }
 export default App;

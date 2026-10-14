@@ -1,7 +1,6 @@
 @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
-@layer theme, base, clerk, components, utilities;
+@layer theme, base, components, utilities;
 @import 'tailwindcss';
-@import '@clerk/themes/shadcn.css';
 @import 'tw-animate-css';
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:is(.dark *));
@@ -393,6 +392,21 @@ a { color: inherit; text-decoration: none; }
 .auth-card-wrap>div { width:100%; }
 .auth-legal { color:#a0a39c; font:8px var(--app-font-mono); letter-spacing:.85px; margin-top:26px; }
 .auth-legal span { padding:0 5px; color:#cf895c; }
+.demo-login-card { width:100%; padding:30px; border:1px solid #ebe7dd; border-radius:16px; background:#fffefa; box-shadow:0 18px 48px rgba(48,57,50,.06); }
+.demo-login-mark { display:grid; place-items:center; width:42px; height:42px; margin:0 auto 16px; border-radius:12px; color:#fffefa; background:#2d6555; }
+.demo-login-card>.eyebrow { text-align:center; }
+.demo-login-title { margin:8px 0 5px; text-align:center; color:#25333a; font-size:25px; letter-spacing:-.7px; }
+.demo-login-copy { margin:0 0 22px; color:#818b84; font-size:11px; text-align:center; }
+.demo-login-form { display:flex; flex-direction:column; gap:14px; }
+.demo-login-form label { display:flex; flex-direction:column; gap:7px; color:#47564e; font-size:11px; font-weight:600; }
+.demo-login-form .field { height:42px; font-size:12px; }
+.demo-login-submit { width:100%; justify-content:center; margin-top:4px; }
+.demo-login-submit:disabled { cursor:wait; opacity:.72; }
+.demo-login-note { display:flex; align-items:center; justify-content:center; gap:6px; margin:19px 0 0; color:#929991; font-size:9px; }
+.demo-retry { margin-left:auto; padding:2px 0; border:0; background:none; color:#7e423b; font-size:10px; font-weight:700; text-decoration:underline; cursor:pointer; }
+.auth-retry-message { max-width:320px; color:#747e76; font-size:12px; text-align:center; }
+.user-identity { display:flex; flex-direction:column; gap:2px; }
+.user-role { color:#89938b; font-size:9px; }
 .auth-loading { min-height:100dvh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:25px; }
 .loading-skeleton { display:grid; width:250px; gap:10px; }
 .loading-skeleton i { height:11px; background:#e9e6dc; border-radius:8px; animation:pulse 1.3s ease-in-out infinite alternate; }
@@ -422,6 +436,7 @@ a { color: inherit; text-decoration: none; }
   .topbar-location { display:none; }
   .topbar-user { margin-left:auto; }
   .user-name { display:none; }
+  .user-role { display:none; }
   .topbar-mobile { display:flex; align-items:center; gap:9px; }
   .topbar-mobile .brand-mark { width:27px; height:27px; }
   .mobile-warehouse { color:#718077; font-size:10px; }

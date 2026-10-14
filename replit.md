@@ -4,7 +4,7 @@ A warehouse MVP for small teams to review stock, manage products, and record inv
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/api-server run dev` — run the API server (port 8080)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
@@ -30,12 +30,13 @@ A warehouse MVP for small teams to review stock, manage products, and record inv
 ## Architecture decisions
 
 - Inventory is a browser-persisted demo for the first MVP; changes are not shared across devices or accounts.
-- Authentication uses Replit-managed Clerk email/password sign-in.
-- The app no longer exposes self-service sign-up. Production worker-only access still requires Invite only in Publishing and inviting the intended staff.
+- Authentication uses eight fixed demo accounts, checked server-side with salted scrypt password hashes and signed HTTP-only session cookies. There is no self-registration or email verification.
+- Demo identities use reserved `.test` addresses, not real mailboxes. Treat these shared credentials as public demo access, not private employee accounts.
+- All demo roles can access the current inventory MVP. Role-specific permissions and dispatch/supplier/delivery workflows have not been implemented.
 
 ## Product
 
-Shelfwise provides a public introduction and Clerk sign-in, then a dashboard for product totals, available units, low-stock items, and recent activity. Signed-in users can search, view, add, edit, and delete products, and record received or removed stock.
+Shelfwise provides a public introduction and demo-account sign-in, then a dashboard for product totals, available units, low-stock items, and recent activity. Signed-in demo users can search, view, add, edit, and delete products, and record received or removed stock.
 
 ## User preferences
 
@@ -44,8 +45,7 @@ Shelfwise provides a public introduction and Clerk sign-in, then a dashboard for
 
 ## Gotchas
 
-- Replit-managed Clerk supports email/password sign-in; username-based sign-in requires a different Clerk configuration.
-- Google SSO is configured in the Replit Auth pane, not by the app's React components.
+- Demo credentials are validated by the API server; never put plaintext passwords into the client bundle or source files.
 
 ## Pointers
 

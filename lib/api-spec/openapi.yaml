@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: demo-auth
+    description: Demo-only account authentication
 paths:
   /healthz:
     get:
@@ -24,6 +26,56 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /demo-auth/login:
+    post:
+      operationId: demoAuthLogin
+      tags: [demo-auth]
+      summary: Sign in with a demo account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DemoLoginInput"
+      responses:
+        "200":
+          description: Signed-in demo user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoSessionResponse"
+        "400":
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Email or password is incorrect
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /demo-auth/session:
+    get:
+      operationId: getDemoSession
+      tags: [demo-auth]
+      summary: Get the current demo session
+      responses:
+        "200":
+          description: Current signed-in demo user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DemoSessionStatus"
+  /demo-auth/logout:
+    post:
+      operationId: logoutDemoSession
+      tags: [demo-auth]
+      summary: Sign out the current demo user
+      responses:
+        "204":
+          description: Demo session cleared
 components:
   schemas:
     HealthStatus:
@@ -33,4 +85,62 @@ components:
           type: string
       required:
         - status
+    DemoLoginInput:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 1
+          maxLength: 128
+    DemoUser:
+      type: object
+      required: [email, name, role]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        role:
+          type: string
+          enum:
+            - warehouse_manager
+            - inventory_clerk
+            - receiving_staff
+            - picking_packing_staff
+            - dispatch_staff
+            - system_administrator
+            - supplier
+            - delivery_partner
+    DemoSessionResponse:
+      type: object
+      required: [user, expiresAt]
+      properties:
+        user:
+          $ref: "#/components/schemas/DemoUser"
+        expiresAt:
+          type: string
+          format: date-time
+    DemoSessionStatus:
+      type: object
+      required: [user, expiresAt]
+      properties:
+        user:
+          anyOf:
+            - $ref: "#/components/schemas/DemoUser"
+            - type: "null"
+        expiresAt:
+          type: ["string", "null"]
+          format: date-time
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
 
