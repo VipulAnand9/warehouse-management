@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
-import { ClerkProvider, SignIn, SignUp, useAuth, useClerk, useUser } from '@clerk/react';
+import { ClerkProvider, SignIn, useAuth, useClerk, useUser } from '@clerk/react';
 import { publishableKeyFromHost } from '@clerk/react/internal';
 import { shadcn } from '@clerk/themes';
 import { Link, Route, Switch, Router as WouterRouter, useLocation } from 'wouter';
@@ -16,7 +16,6 @@ import {
 
 const basePath = (import.meta.env.BASE_URL || '/').replace(/\/$/, '');
 const signInPath = `${basePath}/sign-in` || '/sign-in';
-const signUpPath = `${basePath}/sign-up` || '/sign-up';
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
   import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
@@ -53,6 +52,7 @@ const clerkAppearance = {
     formFieldLabel: 'text-[#25333a]',
     footerActionLink: 'font-semibold text-[#2d6555]',
     footerActionText: 'text-[#718078]',
+    footerAction: 'hidden',
     dividerText: 'text-[#718078]',
     identityPreviewEditButton: 'text-[#2d6555]',
     formFieldSuccessText: 'text-[#2d6555]',
@@ -62,7 +62,6 @@ const clerkAppearance = {
     socialButtonsBlockButton: 'border-[#e7e2d7] bg-white',
     formButtonPrimary: 'font-semibold',
     formFieldInput: 'border-[#e7e2d7] bg-white text-[#25333a]',
-    footerAction: 'text-[#718078]',
     dividerLine: 'bg-[#e7e2d7]',
     alert: 'border-[#e7e2d7]',
     otpCodeFieldInput: 'border-[#e7e2d7] bg-white text-[#25333a]',
@@ -72,7 +71,6 @@ const clerkAppearance = {
 };
 const clerkLocalization = {
   signIn: { start: { title: 'Welcome back', subtitle: 'Sign in to your Shelfwise workspace' } },
-  signUp: { start: { title: 'Set up your workspace', subtitle: 'A clear view of what is on your shelves' } },
 };
 
 function Brand({ compact = false, light = false }: { compact?: boolean; light?: boolean }) {
@@ -160,7 +158,7 @@ function PublicHome() {
           <div className="eyebrow"><span className="live-dot"/> THE SMALL-TEAM STOCKROOM</div>
           <h1 className="display">Know what’s<br/>on your <em>shelves.</em></h1>
           <p>A calmer way to keep tabs on stock, spot what’s running low, and make everyday warehouse updates.</p>
-          <div className="hero-actions"><Link href={signUpPath} className="btn btn-primary">Get started <ArrowRight size={16}/></Link><Link href={signInPath} className="text-link">Already have a workspace? <span>Sign in</span></Link></div>
+          <div className="hero-actions"><Link href={signInPath} className="btn btn-primary">Worker sign in <ArrowRight size={16}/></Link><span className="text-link">For authorized warehouse staff</span></div>
           <div className="hero-proof"><div className="proof-avatars"><span>J</span><span>M</span><span>A</span></div><span>Built for real shifts, not spreadsheets.</span></div>
         </div>
         <div className="hero-visual enter">
@@ -179,7 +177,7 @@ function PublicHome() {
         <div className="hero-side-note">LESS GUESSING<br/>MORE GETTING IT DONE <span>↘</span></div>
       </section>
       <section className="promise-strip"><div><span className="promise-number">01</span><b>Find it fast</b><span>Search by product, SKU, or location.</span></div><div><span className="promise-number">02</span><b>Stay ahead</b><span>Low-stock signals, without the noise.</span></div><div><span className="promise-number">03</span><b>Keep a clear trail</b><span>Every stock change has a history.</span></div></section>
-      <section className="landing-detail"><div className="detail-label">A BETTER STOCKROOM ROUTINE <span>EST. FOR SMALL TEAMS</span></div><div className="detail-body"><h2 className="display">Small updates.<br/><em>Big picture.</em></h2><div><p>No complicated setup. No training day. Just a dependable home for your inventory, built around the work your team already does.</p><Link href={signUpPath} className="detail-link">Make your workspace <ArrowRight size={16}/></Link></div></div></section>
+      <section className="landing-detail"><div className="detail-label">A BETTER STOCKROOM ROUTINE <span>EST. FOR SMALL TEAMS</span></div><div className="detail-body"><h2 className="display">Small updates.<br/><em>Big picture.</em></h2><div><p>No complicated setup. No training day. Just a dependable home for your inventory, built around the work your team already does.</p><Link href={signInPath} className="detail-link">Worker sign in <ArrowRight size={16}/></Link></div></div></section>
     </main>
     <footer className="landing-footer"><Brand/><span>Inventory, in good order.</span><span>Demo data stays in your browser</span></footer>
   </div>;
@@ -341,9 +339,8 @@ function Protected({ children }: { children: ReactNode }) {
   if (!isSignedIn) return null;
   return <AppShell>{children}</AppShell>;
 }
-function AuthRoute({ kind }: { kind: 'sign-in' | 'sign-up' }) {
-  const path = kind === 'sign-in' ? signInPath : signUpPath;
-  return <div className="auth-page grain"><Link href="/" className="auth-brand"><Brand/></Link><div className="auth-aside"><div className="auth-aside-kicker">SHELFWISE / NORTH DOCK</div><div className="auth-aside-copy display">A clear view<br/>of <em>what’s next.</em></div><div className="auth-aside-bottom"><span className="auth-graphic"><Boxes size={24}/></span><p>Your stockroom, organized.<br/>Your next shift, already in the know.</p></div></div><div className="auth-content"><div className="auth-card-wrap">{kind === 'sign-in' ? <SignIn routing="path" path={path} signUpUrl={signUpPath} /> : <SignUp routing="path" path={path} signInUrl={signInPath}/>}</div><span className="auth-legal">PRIVATE BY DESIGN <span>·</span> SIMPLE BY NATURE</span></div></div>;
+function AuthRoute() {
+  return <div className="auth-page grain"><Link href="/" className="auth-brand"><Brand/></Link><div className="auth-aside"><div className="auth-aside-kicker">SHELFWISE / NORTH DOCK</div><div className="auth-aside-copy display">A clear view<br/>of <em>what’s next.</em></div><div className="auth-aside-bottom"><span className="auth-graphic"><Boxes size={24}/></span><p>Your stockroom, organized.<br/>Your next shift, already in the know.</p></div></div><div className="auth-content"><div className="auth-card-wrap"><SignIn routing="path" path={signInPath}/></div><span className="auth-legal">PRIVATE BY DESIGN <span>·</span> WAREHOUSE STAFF ONLY</span></div></div>;
 }
 function NotFound() {
   return <div className="not-found"><Brand/><span className="eyebrow">404 · WRONG AISLE</span><h1 className="display">We couldn’t find<br/>that shelf.</h1><p>The page may have moved or the address may be off.</p><Link href="/dashboard" className="btn btn-primary">Back to overview <ArrowRight size={16}/></Link></div>;
@@ -354,8 +351,7 @@ function ClerkApp() {
     <Route path="/dashboard"><Protected><Dashboard/></Protected></Route>
     <Route path="/inventory"><Protected><Inventory/></Protected></Route>
     <Route path="/stock"><Protected><Stock/></Protected></Route>
-    <Route path="/sign-in/*?"><AuthRoute kind="sign-in"/></Route>
-    <Route path="/sign-up/*?"><AuthRoute kind="sign-up"/></Route>
+    <Route path="/sign-in/*?"><AuthRoute/></Route>
     <Route><NotFound/></Route>
   </Switch>;
 }
@@ -374,7 +370,6 @@ function ClerkProviderWithRoutes() {
     appearance={clerkAppearance}
     localization={clerkLocalization}
     signInUrl={signInPath}
-    signUpUrl={signUpPath}
     routerPush={(to) => setLocation(stripBase(to))}
     routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
   >

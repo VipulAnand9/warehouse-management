@@ -31,6 +31,7 @@ A warehouse MVP for small teams to review stock, manage products, and record inv
 
 - Inventory is a browser-persisted demo for the first MVP; changes are not shared across devices or accounts.
 - Authentication uses Replit-managed Clerk email/password sign-in.
+- The app no longer exposes self-service sign-up. Production worker-only access still requires Invite only in Publishing and inviting the intended staff.
 
 ## Product
 
@@ -44,6 +45,7 @@ Shelfwise provides a public introduction and Clerk sign-in, then a dashboard for
 ## Gotchas
 
 - Replit-managed Clerk supports email/password sign-in; username-based sign-in requires a different Clerk configuration.
+- Google SSO is configured in the Replit Auth pane, not by the app's React components.
 
 ## Pointers
 
